@@ -1,0 +1,173 @@
+<html>
+	
+    <body>
+        <div class='content'>
+    	    <div id='view1-1'>Holy wow, this is view 1</div>
+    	    <div id='view2-1'>This is some sampe text for view 2</div>
+            <div id='view3-1'>default text</div>
+
+    	    <div id='view1-2'>Some additional view 1 stuff</div>
+    	    <div id='view2-2'>We can have multiple elements accociated with a view regardless of their parent's</div>
+            <div id='view3-3'>This is some text in view 3 which is not updated by the dataModel</div>
+
+            <div id='view4-1'>adding this view to multi-view dynamically</div>
+
+        </div>
+
+        <div class='controls'>
+            <h1>Example</h1>
+    	    <span class='view1-trigger'>view 1</span>
+    	    <span class='view2-trigger'>view 2</span>
+            <span class='view3-trigger'>view 3</span>
+            <span class='view4-trigger'>view 4</span>
+        </div>
+    	
+    </body>
+	<script src='basic-multiview.js'></script>
+	<script>
+		
+    /*
+    * Example config object.
+    * the targets use `document.querySelector`
+    * The last object here has a model defined to retreive api data when this view is switched to.
+    */
+    var testMulti = multiview({
+        groupId: 1234, //required for events;
+    	views:[
+            {
+            	viewId: 4321,
+            	triggerTarget: ".view1-trigger",
+            	viewTargets:[
+                    {target:"#view1-1", display: "inline-block"}, //supports setting a specific display value to show elements
+                    {target: "#view1-2"}
+            	],
+            },
+            {
+                default: true,
+            	viewId: 4322,
+            	triggerTarget: ".view2-trigger",
+            	viewTargets:[
+                    {target: "#view2-1"},
+                    {target: "#view2-2"}
+            	],
+            },
+            {
+                //default: true,  /* we can even make dataModal views default */
+                viewId: 4323,
+                triggerTarget: ".view3-trigger",
+                viewTargets:[
+                    {target: "#view3-1"},
+                    {target:"#view3-3"},
+                ],
+                cache: true, /* Only makes request 1 time per page load. */
+                dataModel: {
+                    url: "https://nickfreese.com/api/type/project",
+                    type:"GET",
+                    callback: function(data, id, parent){
+
+                        var view = parent.getViewById(id);
+                        var data = JSON.parse(data);
+                        document.querySelector(view.s.viewTargets[0].target).innerHTML = data.cardList[0].name; // placing some random data in the view
+
+                        /* remove loading shield */
+                        var shield = document.querySelector('#' + 'loading-shield-' + id);
+                        shield.parentElement.removeChild(shield);
+
+                    },
+                    beforeRequest: function(id, parent){
+                        /* before request parameter can be used to call loading animations or transitions */
+
+                        var shield = document.createElement('div');
+                        shield.id = 'loading-shield-' + id;
+                        shield.style.background = '#ffffff';
+                        shield.style.opacity = '0.5';
+                        shield.style.position = 'fixed';
+                        shield.style.width = '100%';
+                        shield.style.height = '100vh';
+                        shield.style.top = '0';
+                        shield.style.left = '0';
+                        document.querySelector("body").appendChild(shield);
+
+                    },
+                },
+            }
+
+    	],
+    });
+    
+    
+
+    /*
+    * we can listen for view switching in the group by listening for <grouId>-switch
+    */
+    window.addEventListener('1234-switch', function(e){
+        e = e || window.e;
+        console.log('you switched views in group 1234 to: ' + e.detail);
+    });
+
+    
+
+    /*
+    * - We can add views to the view list and then initialize them by their ID.
+    */
+    testMulti.views.push({
+                viewId: 4324,
+                triggerTarget: ".view4-trigger",
+                viewTargets:[
+                    {target:"#view4-1", display: "inline-block"}
+                ],
+            });
+    testMulti.initView(4324);
+	</script>
+
+<style>
+body{
+    font-size:16px;
+    font-family:arial;
+}
+.controls {
+    display: inline-block;
+    position: fixed;
+    width: 200px;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 12px;
+    background: #365c73;
+}
+.controls h1{
+    color: #ffffff; 
+    box-sizing: border-box;
+    padding-left:20px;
+}
+.controls span {
+    display: inline-block;
+    box-sizing: border-box;
+    float: left;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 5px 20px;
+    color: #ffffff;
+    border-bottom: 1px solid #ffffff70;
+    cursor: pointer;
+    border-radius: 0px 10px;
+}
+
+.controls span:hover {
+    background: #517b8e75;
+}
+
+.content{
+    display:inline-block;
+    position:fixed;
+    width:calc(100%-200px);
+    left:200px;
+    top:0;
+    height:100vh;
+    box-sizing:border-box;
+    padding:12px;
+
+}
+</style>
+</html>
